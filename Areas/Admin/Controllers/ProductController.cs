@@ -60,10 +60,12 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
             else
             {
                 //Update product
+                productVM.Product = _unitOfWork.Product.GetFirstOrDefault(u=>u.Id== id);
+                return View(productVM);
             }
             
             
-            return View(productVM);
+           
         }
 
         // POST: Category/Edit/5
@@ -80,6 +82,16 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
                     string fileName = Guid.NewGuid().ToString();
                     var uploads = Path.Combine(wwwRootPath, @"images\products");
                     var extension = Path.GetExtension(file.FileName);
+
+                    if(obj.Product.ImageUrl!= null)
+                    {
+                        var oldImagePath = Path.Combine(wwwRootPath, obj.Product.ImageUrl.TrimStart('\\'));
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            System.IO.File.Delete(oldImagePath);
+                        }
+                    }
+
                     using (var fileStreams = new FileStream(Path.Combine(uploads, fileName + extension), FileMode.Create))
                     {
                         file.CopyTo(fileStreams);
@@ -87,61 +99,62 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
                     obj.Product.ImageUrl = @"\images\products\" + fileName + extension;
 
                 }
-                _unitOfWork.Product.Add(obj.Product);
+                if (obj.Product.Id == 0)
+                {
+                    _unitOfWork.Product.Add(obj.Product);
+                }
+                else
+                {
+                    _unitOfWork.Product.Update(obj.Product);
+                }
+
                     _unitOfWork.Save();
-                    TempData["success"] = "Category Created successfully";
+                    TempData["success"] = "Category Created Successfully";
                 return RedirectToAction(nameof(Index));
             }
             return View(obj);
         }
 
         // GET: Category/Delete/5
-        public IActionResult Delete(int? id)
-        {
-            if (id == null || id == 0)
-            {
-                return NotFound();
-            }
+      
 
-            var category = _unitOfWork.Category
-                .GetFirstOrDefault(m => m.Id == id);
-            if (category == null)
-            {
-                return NotFound();
-            }
-
-            return View(category);
-        }
-
-        // POST: Category/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
-        {
-            if (_unitOfWork.Category == null)
-            {
-                return Problem("Entity set 'DataProduct.Categories'  is null.");
-            }
-            var category = _unitOfWork.Category.GetFirstOrDefault(u => u.Id == id);
-            if (category != null)
-            {
-                _unitOfWork.Category.Remove(category);
-                TempData["success"] = "Category deleted successfully";
-            }
-
-
-            _unitOfWork.Save();
-            return RedirectToAction(nameof(Index));
-        }
+        
 
 
 		#region API CALLS
 		[HttpGet]
 		public IActionResult GetAll()
 		{
-			var productList = _unitOfWork.Product.GetAll();
+			var productList = _unitOfWork.Product.GetAll(includeProperties :"Category,CoverType");
             return Json(new { data = productList });
 		}
+
+
+		// POST: Category/Delete/5
+		
+		[HttpDelete]
+		public IActionResult Delete(int? id)
+		{
+			
+			var obj = _unitOfWork.Product.GetFirstOrDefault(u => u.Id == id);
+			if (obj == null)
+			{
+				return Json(new { success = false, message = "Error while deleting" });
+			}
+
+			var oldImagePath = Path.Combine(_hostEnvironment.WebRootPath, obj.ImageUrl.TrimStart('\\'));
+			if (System.IO.File.Exists(oldImagePath))
+			{
+				System.IO.File.Delete(oldImagePath);
+			}
+
+			_unitOfWork.Product.Remove(obj);
+			_unitOfWork.Save();
+			return Json(new { success = true, message = "Delete Successful" });
+			
+		}
+
+
 		#endregion
 
 
