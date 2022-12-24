@@ -3,8 +3,10 @@ using BulkyBook.DataAccess.Reprository.IReprository;
 using BulkyBook.DataAccess.ViewModels;
 using BulkyBook.Model;
 using BulkyBook.Model.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace BulkyBookWeb.Areas.Customer.Controllers
 {
@@ -32,18 +34,48 @@ namespace BulkyBookWeb.Areas.Customer.Controllers
         }
 
 
-        public IActionResult Details(int id)
+        public IActionResult Details(int productId)
         {
             ShoppingCart cartobj = new()
             {
                 Count = 1,
-                Product = _unitOfWork.Product.GetFirstOrDefault(x => x.Id == id, includeProperties: "Category,CoverType")
+                ProductId = productId,
+                Product = _unitOfWork.Product.GetFirstOrDefault(
+                    x => x.Id == productId, includeProperties: "Category,CoverType")
             };
 			return View(cartobj);
 		}
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public IActionResult Details(ShoppingCart shoppingCart)
+        {
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            shoppingCart.ApplicationUserId = claim.Value;
 
-		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+            ShoppingCart cartFromDb = _unitOfWork.ShoppingCart.GetFirstOrDefault(
+                u=>u.ApplicationUserId == claim.Value && u.ProductId == shoppingCart.ProductId
+                );
+
+            if (cartFromDb == null)
+            {
+				_unitOfWork.ShoppingCart.Add(shoppingCart);
+			}
+            else
+            {
+				_unitOfWork.ShoppingCart.IncrementCount(cartFromDb, shoppingCart.Count);
+			}
+
+
+            
+            _unitOfWork.Save();
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
