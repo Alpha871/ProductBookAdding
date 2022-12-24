@@ -2,14 +2,21 @@ using BulkyBook.DataAccess.Data;
 using BulkyBook.DataAccess.Reprository;
 using BulkyBook.DataAccess.Reprository.IReprository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using BulkyBook.DataAccess;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddDbContext<DataProduct>(options => options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddDefaultIdentity<IdentityUser>()
+	.AddEntityFrameworkStores<DataProduct>();
+
+builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
@@ -25,11 +32,14 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseAuthentication();;
 
 app.UseAuthorization();
+app.MapRazorPages();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
+
 
 app.Run();
