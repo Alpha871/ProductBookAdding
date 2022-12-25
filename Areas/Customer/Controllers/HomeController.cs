@@ -1,6 +1,6 @@
 ﻿
 using BulkyBook.DataAccess.Reprository.IReprository;
-using BulkyBook.DataAccess.ViewModels;
+using BulkyBook.Model.Models.ViewModels;
 using BulkyBook.Model;
 using BulkyBook.Model.Models;
 using Microsoft.AspNetCore.Authorization;

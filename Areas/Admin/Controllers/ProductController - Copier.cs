@@ -5,7 +5,7 @@ using BulkyBook.DataAccess.Data;
 using BulkyBook.Model.Models;
 using BulkyBook.DataAccess.Reprository.IReprository;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using BulkyBook.DataAccess.ViewModels;
+using BulkyBook.Model.Models.ViewModels;
 using Microsoft.AspNetCore.Http;
 
 namespace BulkyBookWeb.Areas.Admin.Controllers
