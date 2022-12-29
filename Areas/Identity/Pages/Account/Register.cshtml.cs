@@ -134,12 +134,12 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            if(!_roleManager.RoleExistsAsync(SdRole.Role_Admin).GetAwaiter().GetResult())
+            if(!_roleManager.RoleExistsAsync(Commun.Role_Admin).GetAwaiter().GetResult())
             {
-				_roleManager.CreateAsync(new IdentityRole(SdRole.Role_Admin)).GetAwaiter().GetResult();
-				_roleManager.CreateAsync(new IdentityRole(SdRole.Role_Employee)).GetAwaiter().GetResult();
-				_roleManager.CreateAsync(new IdentityRole(SdRole.Role_User_Indi)).GetAwaiter().GetResult();
-				_roleManager.CreateAsync(new IdentityRole(SdRole.Role_User_Comp)).GetAwaiter().GetResult();
+				_roleManager.CreateAsync(new IdentityRole(Commun.Role_Admin)).GetAwaiter().GetResult();
+				_roleManager.CreateAsync(new IdentityRole(Commun.Role_Employee)).GetAwaiter().GetResult();
+				_roleManager.CreateAsync(new IdentityRole(Commun.Role_User_Indi)).GetAwaiter().GetResult();
+				_roleManager.CreateAsync(new IdentityRole(Commun.Role_User_Comp)).GetAwaiter().GetResult();
 			}
             
             ReturnUrl = returnUrl;
@@ -177,7 +177,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                 user.Name = Input.Name;
                 user.PhoneNumber = Input.PhoneNumber;
                 var result = await _userManager.CreateAsync(user, Input.Password);
-                if(Input.Role == SdRole.Role_User_Comp)
+                if(Input.Role == Commun.Role_User_Comp)
                 {
                     user.CompanyId = Input.CompanyId;
                 }
@@ -187,7 +187,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
 
                     if(Input.Role == null)
                     {
-                        await _userManager.AddToRoleAsync(user, SdRole.Role_User_Indi);
+                        await _userManager.AddToRoleAsync(user, Commun.Role_User_Indi);
                     }
                     else
                     {
